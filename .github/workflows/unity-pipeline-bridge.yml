@@ -22,7 +22,8 @@ jobs:
           curl -fL --retry 5 \
             "https://packages.unity.com/com.unity.pipeline/-/com.unity.pipeline-${VERSION}.tgz" \
             -o out/com.unity.pipeline-${VERSION}.tgz
-          tar -tzf out/com.unity.pipeline-${VERSION}.tgz | head -50
+          tar -tzf out/com.unity.pipeline-${VERSION}.tgz > out/package-contents.txt
+          head -50 out/package-contents.txt
           sha256sum out/com.unity.pipeline-${VERSION}.tgz > out/com.unity.pipeline-${VERSION}.sha256
       - uses: actions/upload-artifact@v4
         with:
