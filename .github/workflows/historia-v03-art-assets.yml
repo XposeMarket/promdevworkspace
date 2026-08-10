@@ -1,0 +1,79 @@
+name: HISTORIA v0.3 CC0 Art Asset Bridge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/historia-v03-art-assets.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Playwright
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Download free CC0 packs
+        run: |
+          set -euxo pipefail
+          cat > /tmp/fetch_itch.py <<'PY'
+          import asyncio
+          from pathlib import Path
+          from playwright.async_api import async_playwright
+
+          OUT = Path('out')
+          OUT.mkdir(exist_ok=True)
+
+          async def grab(page, url, filename_contains, output_name):
+              await page.goto(url, wait_until='domcontentloaded', timeout=90000)
+              await page.get_by_text('No thanks, just take me to the downloads', exact=False).click(timeout=30000)
+              await page.wait_for_timeout(1600)
+              blocks = page.locator('.upload')
+              count = await blocks.count()
+              for i in range(count):
+                  block = blocks.nth(i)
+                  txt = await block.inner_text()
+                  if filename_contains.lower() in txt.lower():
+                      link = block.locator('a').filter(has_text='Download').first
+                      async with page.expect_download(timeout=180000) as info:
+                          await link.click()
+                      dl = await info.value
+                      await dl.save_as(str(OUT / output_name))
+                      print('saved', output_name, 'from', dl.suggested_filename)
+                      return
+              raise RuntimeError(f'Could not find {filename_contains!r}; upload blocks={count}')
+
+          async def main():
+              async with async_playwright() as p:
+                  browser = await p.chromium.launch(headless=True)
+                  page = await browser.new_page(accept_downloads=True)
+                  await grab(page,
+                      'https://quaternius.itch.io/modular-character-outfits-fantasy/purchase',
+                      'Modular Character Outfits - Fantasy[Standard].zip',
+                      'Modular-Character-Outfits-Fantasy-Standard.zip')
+                  await grab(page,
+                      'https://quaternius.itch.io/medieval-village-megakit/purchase',
+                      'Medieval Village MegaKit[Standard].zip',
+                      'Medieval-Village-MegaKit-Standard.zip')
+                  await browser.close()
+
+          asyncio.run(main())
+          PY
+          python /tmp/fetch_itch.py
+          sha256sum out/*.zip > out/SHA256SUMS
+          ls -lh out
+
+      - name: Upload CC0 art packs
+        uses: actions/upload-artifact@v4
+        with:
+          name: historia-v03-cc0-art-packs
+          path: out/
+          compression-level: 0
+          retention-days: 2
