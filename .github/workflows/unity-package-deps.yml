@@ -1,0 +1,39 @@
+name: Unity Offline Package Dependencies
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/unity-package-deps.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packages
+        run: |
+          set -euxo pipefail
+          mkdir -p out
+          fetch_pkg() {
+            NAME="$1"; VERSION="$2"
+            curl -fL --retry 5 "https://packages.unity.com/${NAME}/-/${NAME}-${VERSION}.tgz" -o "out/${NAME}-${VERSION}.tgz"
+            sha256sum "out/${NAME}-${VERSION}.tgz" >> out/SHA256SUMS
+            mkdir -p "inspect/${NAME}"
+            tar -xzf "out/${NAME}-${VERSION}.tgz" -C "inspect/${NAME}" --strip-components=1
+            cp "inspect/${NAME}/package.json" "out/${NAME}-${VERSION}.package.json"
+          }
+          fetch_pkg com.unity.test-framework 1.1.33
+          fetch_pkg com.unity.nuget.newtonsoft-json 3.0.2
+          fetch_pkg com.unity.nuget.mono-cecil 1.11.6
+          cat out/*.package.json
+          ls -lh out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-offline-pipeline-deps
+          path: out/
+          compression-level: 0
+          retention-days: 2
