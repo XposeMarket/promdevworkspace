@@ -1,0 +1,60 @@
+name: VM Agent Support Bridge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vm-agent-support-bridge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  godot-mcp-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bundle Godot MCP runtime with dependencies
+        run: |
+          set -euxo pipefail
+          mkdir -p bundle
+          cd bundle
+          npm init -y >/dev/null
+          npm install --omit=dev godot-mcp-runtime
+          node_modules/.bin/godot-mcp-runtime --help | head -30 || true
+          cd ..
+          tar -czf godot-mcp-runtime-bundle.tar.gz bundle
+          sha256sum godot-mcp-runtime-bundle.tar.gz > godot-mcp-runtime-bundle.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: godot-mcp-runtime-bundle
+          path: |
+            godot-mcp-runtime-bundle.tar.gz
+            godot-mcp-runtime-bundle.sha256
+          compression-level: 0
+          retention-days: 2
+
+  unity-support:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Unity CLI and support modules
+        run: |
+          set -euxo pipefail
+          curl -fL --retry 5 https://public-cdn.cloud.unity3d.com/hub/prod/cli/1.0.0-beta.2/unity-linux-x64 -o unity
+          chmod +x unity
+          ./unity pipeline list-versions | tee pipeline-versions.txt || true
+          curl -fL --retry 5 \
+            https://public-stevedore.unity3d.com/r/public/licensing-client-linux-x64/1.17.4.4293ba1.unsigned_3dae2d0fb4cd7bbf9ba7644560cd4f53dc1221331f71c43d0cf5cf4ff7f065fd.zip \
+            -o licensing-client.zip
+          sha256sum licensing-client.zip > licensing-client.sha256
+          unzip -l licensing-client.zip | head -40 | tee licensing-client-contents.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unity-support-modules
+          path: |
+            licensing-client.zip
+            licensing-client.sha256
+            licensing-client-contents.txt
+            pipeline-versions.txt
+          compression-level: 0
+          retention-days: 2
