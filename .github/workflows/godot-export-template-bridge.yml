@@ -1,0 +1,32 @@
+name: Godot Linux Export Templates Bridge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/godot-export-template-bridge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and extract Linux templates
+        run: |
+          set -euxo pipefail
+          curl -fL --retry 5 \
+            https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_export_templates.tpz \
+            -o templates.tpz
+          mkdir -p out
+          unzip -j templates.tpz 'templates/linux_release.x86_64' 'templates/linux_debug.x86_64' -d out
+          sha256sum out/* > out/SHA256SUMS
+          ls -lh out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: godot-4.7.1-linux-export-templates
+          path: out/
+          compression-level: 0
+          retention-days: 2
