@@ -1,0 +1,95 @@
+name: Rechunk Unity Editor for VM
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/unity-editor-rechunk.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  rechunk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download prior Unity Editor artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: unity-editor-6000.3.7f1-linux-x64
+          path: source
+          github-token: ${{ github.token }}
+          repository: XposeMarket/promdevworkspace
+          run-id: 31403558530
+
+      - name: Reassemble and split into connector-sized parts
+        run: |
+          set -euxo pipefail
+          ls -lh source
+          cat source/UnityEditor.tar.xz.part-* > UnityEditor.tar.xz
+          cat source/UnityEditor.sha256
+          sha256sum UnityEditor.tar.xz
+          sha256sum -c source/UnityEditor.sha256
+          mkdir -p parts
+          split -b 400M -d -a 2 UnityEditor.tar.xz parts/UnityEditor.tar.xz.part-
+          cp source/UnityEditor.sha256 parts/
+          ls -lh parts
+
+      - name: Upload checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-editor-checksum
+          path: parts/UnityEditor.sha256
+          compression-level: 0
+          retention-days: 2
+
+      - name: Upload part 00
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-00, path: parts/UnityEditor.tar.xz.part-00, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 01
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-01, path: parts/UnityEditor.tar.xz.part-01, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 02
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-02, path: parts/UnityEditor.tar.xz.part-02, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 03
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-03, path: parts/UnityEditor.tar.xz.part-03, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 04
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-04, path: parts/UnityEditor.tar.xz.part-04, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 05
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-05, path: parts/UnityEditor.tar.xz.part-05, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 06
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-06, path: parts/UnityEditor.tar.xz.part-06, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 07
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-07, path: parts/UnityEditor.tar.xz.part-07, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 08
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-08, path: parts/UnityEditor.tar.xz.part-08, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 09
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-09, path: parts/UnityEditor.tar.xz.part-09, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 10
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-10, path: parts/UnityEditor.tar.xz.part-10, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 11
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-11, path: parts/UnityEditor.tar.xz.part-11, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 12
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-12, path: parts/UnityEditor.tar.xz.part-12, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 13
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-13, path: parts/UnityEditor.tar.xz.part-13, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 14
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-14, path: parts/UnityEditor.tar.xz.part-14, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
+      - name: Upload part 15
+        uses: actions/upload-artifact@v4
+        with: { name: unity-editor-part-15, path: parts/UnityEditor.tar.xz.part-15, compression-level: 0, retention-days: 2, if-no-files-found: ignore }
