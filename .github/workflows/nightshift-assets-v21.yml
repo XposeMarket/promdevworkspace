@@ -1,0 +1,27 @@
+name: NIGHT SHIFT v2.1 asset bridge
+
+on:
+  push:
+    paths:
+      - '.github/workflows/nightshift-assets-v21.yml'
+  workflow_dispatch:
+
+jobs:
+  fetch-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download CC0 asset packs
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p out
+          curl -L --fail --retry 4 -o out/kenney_mini-market.zip 'https://opengameart.org/sites/default/files/kenney_mini-market.zip'
+          curl -L --fail --retry 4 -o out/tiny_treats_baked_goods_1.0.zip 'https://opengameart.org/sites/default/files/tiny_treats_baked_goods_1.0.zip'
+          unzip -l out/kenney_mini-market.zip | head -100 || true
+          unzip -l out/tiny_treats_baked_goods_1.0.zip | head -100 || true
+      - name: Upload asset bridge
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightshift-v21-cc0-assets
+          path: out/*
+          retention-days: 2
