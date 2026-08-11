@@ -1,0 +1,27 @@
+name: NIGHT SHIFT v2.1 extra asset bridge
+
+on:
+  push:
+    paths:
+      - '.github/workflows/nightshift-assets-v21-extra.yml'
+  workflow_dispatch:
+
+jobs:
+  fetch-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Kenney CC0 packs
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p out
+          curl -L --fail --retry 4 -o out/kenney_food-kit.zip 'https://opengameart.org/sites/default/files/kenney_food-kit.zip'
+          curl -L --fail --retry 4 -o out/kenney_furniturePack.zip 'https://opengameart.org/sites/default/files/kenney_furniturePack.zip'
+          unzip -l out/kenney_food-kit.zip | head -80 || true
+          unzip -l out/kenney_furniturePack.zip | head -80 || true
+      - name: Upload extra asset bridge
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightshift-v21-extra-cc0-assets
+          path: out/*
+          retention-days: 2
